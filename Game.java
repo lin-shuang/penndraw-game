@@ -16,6 +16,11 @@ public class Game {
         double playerY = canvasHeight / 2.0;
         double playerSpeed = 2.0; // Player movement speed
 
+        // Set world limits
+        double worldBorderX = canvasWidth / 2.0;
+        double worldBorderY = canvasHeight / 2.0;
+        double worldBorderR = 200;
+
         while (true) {
             // Clear the canvas
             PennDraw.clear();
@@ -24,32 +29,28 @@ public class Game {
             if (PennDraw.isKeyPressed('W')) {
                 double newX = playerX + playerSpeed * Math.cos(Math.toRadians(90));
                 double newY = playerY + playerSpeed * Math.sin(Math.toRadians(90));
-                if (isValidMove(newX, newY)) {
-                    playerX = newX;
+                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
                     playerY = newY;
                 }
             }
             if (PennDraw.isKeyPressed('S')) {
                 double newX = playerX - playerSpeed * Math.cos(Math.toRadians(90));
                 double newY = playerY - playerSpeed * Math.sin(Math.toRadians(90));
-                if (isValidMove(newX, newY)) {
-                    playerX = newX;
+                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
                     playerY = newY;
                 }
             }
             if (PennDraw.isKeyPressed('A')) {
                 double newX = playerX - playerSpeed * Math.cos(Math.toRadians(0));
                 double newY = playerY - playerSpeed * Math.sin(Math.toRadians(0));
-                if (isValidMove(newX, newY)) {
-                    playerX = newX;
+                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
                     playerY = newY;
                 }
             }
             if (PennDraw.isKeyPressed('D')) {
                 double newX = playerX + playerSpeed * Math.cos(Math.toRadians(0));
                 double newY = playerY + playerSpeed * Math.sin(Math.toRadians(0));
-                if (isValidMove(newX, newY)) {
-                    playerX = newX;
+                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
                     playerY = newY;
                 }
             }
@@ -62,6 +63,7 @@ public class Game {
             drawBackground();
             drawPlayer(playerX, playerY);
             drawCamera(playerX, playerY, cameraX, cameraY);
+            drawWorldBorder(worldBorderX, worldBorderY, worldBorderR);
 
             // Show the frame
             PennDraw.enableAnimation(60);
@@ -69,12 +71,9 @@ public class Game {
         }
     }
 
-    // Check if the specified coordinates are within the valid game area
-    private static boolean isValidMove(double x, double y) {
-        // Example: Allow movement within the canvas bounds
-        int canvasWidth = 800;
-        int canvasHeight = 600;
-        return x >= 0 && x <= canvasWidth && y >= 0 && y <= canvasHeight;
+    // Check if the specified coordinates are within the world border
+    private static boolean isValidMove(double x, double y, double borderX, double borderY, double borderRadius) {
+        return Math.pow(x - borderX, 2) + Math.pow(y - borderY, 2) <= Math.pow(borderRadius, 2);
     }
 
     // Draw the background
@@ -94,5 +93,11 @@ public class Game {
     private static void drawCamera(double playerX, double playerY, double cameraX, double cameraY) {
         PennDraw.setPenColor(PennDraw.BLACK);
         PennDraw.line(playerX, playerY, cameraX, cameraY);
+    }
+
+    // Draw the world border as a red circle
+    private static void drawWorldBorder(double x, double y, double radius) {
+        PennDraw.setPenColor(PennDraw.RED);
+        PennDraw.circle(x, y, radius);
     }
 }
