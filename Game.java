@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.scene.input.KeyEvent;
 import src.PennDraw;
 import src.entities.Rock;
 
@@ -8,6 +9,8 @@ public class Game {
 
     public static int canvasWidth = 800;
     public static int canvasHeight = 600;
+    public static double[] playerCoords = {canvasWidth/2.0, canvasHeight/2.0}; //[X, Y]
+
 
     public static void main(String[] args) {
         // Set up the canvas
@@ -16,9 +19,9 @@ public class Game {
         PennDraw.setYscale(0, canvasHeight);
 
         // Player properties
-        double playerX = canvasWidth / 2.0;
-        double playerY = canvasHeight / 2.0;
-        double playerSpeed = 2.0; // Player movement speed
+        double playerSpeed = 2.0;
+        boolean playerCanMove = true;
+        double cameraX, cameraY;
 
         // Set world limits
         double worldBorderX = canvasWidth / 2.0;
@@ -27,51 +30,24 @@ public class Game {
 
         // Rocks list
         List<Rock> rocks = new ArrayList<>();
-        rocks = drawRocks(10, rocks, worldBorderX, worldBorderY, worldBorderR, playerX, playerY);
+        rocks = drawRocks(10, rocks, worldBorderX, worldBorderY, worldBorderR);
 
         //game loop
         while (true) {
             // Clear the canvas
             PennDraw.clear();
 
-            // Check for user input and update player position
-            if (PennDraw.isKeyPressed('W')) {
-                double newX = playerX + playerSpeed * Math.cos(Math.toRadians(90));
-                double newY = playerY + playerSpeed * Math.sin(Math.toRadians(90));
-                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
-                    playerY = newY;
-                }
-            }
-            if (PennDraw.isKeyPressed('S')) {
-                double newX = playerX - playerSpeed * Math.cos(Math.toRadians(90));
-                double newY = playerY - playerSpeed * Math.sin(Math.toRadians(90));
-                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
-                    playerY = newY;
-                }
-            }
-            if (PennDraw.isKeyPressed('A')) {
-                double newX = playerX - playerSpeed * Math.cos(Math.toRadians(0));
-                double newY = playerY - playerSpeed * Math.sin(Math.toRadians(0));
-                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
-                    playerY = newY;
-                }
-            }
-            if (PennDraw.isKeyPressed('D')) {
-                double newX = playerX + playerSpeed * Math.cos(Math.toRadians(0));
-                double newY = playerY + playerSpeed * Math.sin(Math.toRadians(0));
-                if (isValidMove(newX, newY, worldBorderX, worldBorderY, worldBorderR)) {                    playerX = newX;
-                    playerY = newY;
-                }
-            }
+            // Player movement
+            handlePlayerInput(playerSpeed, worldBorderX, worldBorderY, worldBorderR, rocks, canvasWidth, canvasHeight);
 
             // Update the camera based on the mouse direction
-            double cameraX = PennDraw.mouseX();
-            double cameraY = PennDraw.mouseY();
+            cameraX = PennDraw.mouseX();
+            cameraY = PennDraw.mouseY();
 
             // Draw the game objects
             drawBackground();
-            drawPlayer(playerX, playerY);
-            drawCamera(playerX, playerY, cameraX, cameraY);
+            drawPlayer(playerCoords);
+            drawCamera(playerCoords, cameraX, cameraY);
             drawWorldBorder(worldBorderX, worldBorderY, worldBorderR);
             
             // Draw rocks
@@ -98,15 +74,15 @@ public class Game {
     }
 
     // Draw the player character
-    private static void drawPlayer(double x, double y) {
+    private static void drawPlayer(double[] playerCoords) {
         PennDraw.setPenColor(PennDraw.RED);
-        PennDraw.filledCircle(x, y, 10);
+        PennDraw.filledCircle(playerCoords[0], playerCoords[1], 10);
     }
 
     // Draw the camera view based on the player's position and the mouse direction
-    private static void drawCamera(double playerX, double playerY, double cameraX, double cameraY) {
+    private static void drawCamera(double[] playerCoords, double cameraX, double cameraY) {
         PennDraw.setPenColor(PennDraw.BLACK);
-        PennDraw.line(playerX, playerY, cameraX, cameraY);
+        PennDraw.line(playerCoords[0], playerCoords[1], cameraX, cameraY);
     }
 
     // Draw the world border as a red circle
@@ -116,7 +92,7 @@ public class Game {
     }
 
     // Draw rocks
-    private static List<Rock> drawRocks(int numRocks, List<Rock> rocks, double worldBorderX, double worldBorderY, double worldBorderR, double playerX, double playerY){
+    private static List<Rock> drawRocks(int numRocks, List<Rock> rocks, double worldBorderX, double worldBorderY, double worldBorderR){
         for (int i = 0; i < numRocks; i++) {
             Rock rock = Rock.generateRandomRock(worldBorderX, worldBorderY, worldBorderR);
             rocks.add(rock);
@@ -129,5 +105,43 @@ public class Game {
         double distanceSquared = Math.pow(x - otherX, 2) + Math.pow(y - otherY, 2);
         double radiusSquared = Math.pow(radius, 2);
         return distanceSquared <= radiusSquared;
+    }
+
+    // Method to handle player movement input
+    private static void handlePlayerInput(double playerSpeed, double borderX, double borderY, double borderRadius,
+                                          List<Rock> rocks, int canvasWidth, int canvasHeight) {
+        if (PennDraw.isKeyPressed('W')) {
+            movePlayer(90, playerSpeed, borderX, borderY, borderRadius, rocks, canvasWidth, canvasHeight);
+        }
+        if (PennDraw.isKeyPressed('S')) {
+            movePlayer(270, playerSpeed, borderX, borderY, borderRadius, rocks, canvasWidth, canvasHeight);
+        }
+        if (PennDraw.isKeyPressed('A')) {
+            movePlayer(180, playerSpeed, borderX, borderY, borderRadius, rocks, canvasWidth, canvasHeight);
+        }
+        if (PennDraw.isKeyPressed('D')) {
+            movePlayer(0, playerSpeed, borderX, borderY, borderRadius, rocks, canvasWidth, canvasHeight);
+        }
+    }
+
+    // Move the player in the specified direction
+    private static void movePlayer(double angleDegrees, double playerSpeed, double borderX, double borderY,
+                                   double borderRadius, List<Rock> rocks, int canvasWidth, int canvasHeight) {
+        double newX = playerCoords[0] + playerSpeed * Math.cos(Math.toRadians(angleDegrees));
+        double newY = playerCoords[1] + playerSpeed * Math.sin(Math.toRadians(angleDegrees));
+        boolean canMove = true;
+
+        // Check collision with each rock
+        for (Rock rock : rocks) {
+            if (rock.collidesWith(newX, newY)) {
+                canMove = false;
+                break;
+            }
+        }
+
+        if (canMove && isValidMove(newX, newY, borderX, borderY, borderRadius)) {
+            playerCoords[0] = newX;
+            playerCoords[1] = newY;
+        }
     }
 }

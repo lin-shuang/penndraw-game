@@ -38,6 +38,13 @@ public class Rock {
         return new Rock(x, y, radius);
     }
 
+    // Collision detection: Check if the rock intersects with a specified point
+    public boolean collidesWith(double otherX, double otherY) {
+        double distanceSquared = Math.pow(x - otherX, 2) + Math.pow(y - otherY, 2);
+        double radiusSquared = Math.pow(radius, 2);
+        return distanceSquared <= radiusSquared;
+    }
+
     // Getters and setters (optional based on your requirements)
     public double getX() {
         return x;
