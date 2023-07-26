@@ -1,4 +1,8 @@
+import java.util.ArrayList;
+import java.util.List;
+
 import src.PennDraw;
+import src.entities.Rock;
 
 public class Game {
 
@@ -21,6 +25,11 @@ public class Game {
         double worldBorderY = canvasHeight / 2.0;
         double worldBorderR = 200;
 
+        // Rocks list
+        List<Rock> rocks = new ArrayList<>();
+        rocks = drawRocks(10, rocks, worldBorderX, worldBorderY, worldBorderR, playerX, playerY);
+
+        //game loop
         while (true) {
             // Clear the canvas
             PennDraw.clear();
@@ -64,7 +73,12 @@ public class Game {
             drawPlayer(playerX, playerY);
             drawCamera(playerX, playerY, cameraX, cameraY);
             drawWorldBorder(worldBorderX, worldBorderY, worldBorderR);
-
+            
+            // Draw rocks
+            for(Rock rock : rocks) {
+                rock.draw();
+            }
+        
             // Show the frame
             PennDraw.enableAnimation(60);
             PennDraw.advance();
@@ -99,5 +113,21 @@ public class Game {
     private static void drawWorldBorder(double x, double y, double radius) {
         PennDraw.setPenColor(PennDraw.RED);
         PennDraw.circle(x, y, radius);
+    }
+
+    // Draw rocks
+    private static List<Rock> drawRocks(int numRocks, List<Rock> rocks, double worldBorderX, double worldBorderY, double worldBorderR, double playerX, double playerY){
+        for (int i = 0; i < numRocks; i++) {
+            Rock rock = Rock.generateRandomRock(worldBorderX, worldBorderY, worldBorderR);
+            rocks.add(rock);
+        }
+        return rocks;
+    }
+
+    // Check for intersects with a specified point
+    public boolean intersects(double x, double y, double radius, double otherX, double otherY) {
+        double distanceSquared = Math.pow(x - otherX, 2) + Math.pow(y - otherY, 2);
+        double radiusSquared = Math.pow(radius, 2);
+        return distanceSquared <= radiusSquared;
     }
 }
